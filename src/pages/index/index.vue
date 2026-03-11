@@ -73,7 +73,7 @@ export default {
 
     // 生成天数相关的下拉选项（1-31）
     const dayOptions = [];
-    for (let i = 1; i <= 31; i++) {
+    for (let i = 0; i <= 31; i++) {
       dayOptions.push(i.toString());
     }
 
@@ -161,6 +161,7 @@ export default {
     calculateEstimatedSalary() {
       const {
         baseSalary,
+        attendanceDays,
         actualAttendance,
         statutoryHolidaySalary,
         statutoryHolidayDays,
@@ -168,14 +169,16 @@ export default {
         otherDeduction
       } = this.formData;
 
+      if (!statutoryHolidayDays) statutoryHolidayDays = 0;
+
       // 检查是否有足够的数据来计算
-      if (baseSalary > 0 && actualAttendance > 0 && statutoryHolidayDays > 0) {
+      if (baseSalary > 0 && actualAttendance > 0) {
         // 计算月考勤天数 = 应出勤天数 + 法定假天数
-        const attendanceDays = actualAttendance + statutoryHolidayDays;
+        const attendanceDaysTotal = attendanceDays + statutoryHolidayDays;
 
         // 计算实发工资
         // 工资/月考勤天数*实际出勤天数+4000/月考勤天数*月法定假天数-扣除保险-其他扣除
-        const estimatedSalary = (baseSalary / attendanceDays) * actualAttendance + (4000 / attendanceDays) * statutoryHolidayDays - insuranceDeduction - otherDeduction;
+        const estimatedSalary = (baseSalary / attendanceDaysTotal) * actualAttendance + (statutoryHolidaySalary / attendanceDaysTotal) * statutoryHolidayDays - insuranceDeduction - otherDeduction;
 
         this.estimatedSalary = Math.max(0, estimatedSalary);
         this.hasEnoughData = true;

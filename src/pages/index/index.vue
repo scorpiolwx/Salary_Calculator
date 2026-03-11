@@ -8,23 +8,7 @@
             :style="{ animationDelay: `${index * 0.1}s` }">
         <text class="label">{{ item.label }}：</text>
         <template v-if="item.key === 'selectedMonth'">
-          <picker mode="date" fields="month" :value="formData[item.key]" @change="handleDateChange" class="input">
-            <view class="picker-text">
-              {{ formData[item.key] || item.placeholder }}
-            </view>
-          </picker>
-        </template>
-        <template v-else-if="['baseSalary', 'statutoryHolidaySalary'].includes(item.key)">
-          <!-- 工资相关的下拉选择器 -->
-          <picker :range="salaryOptions" @change="(e) => handlePickerChange(e, item.key, 'salary')" class="input">
-            <view class="picker-text">
-              {{ formData[item.key] || item.placeholder }}
-            </view>
-          </picker>
-        </template>
-        <template v-else-if="['attendanceDays', 'actualAttendance', 'statutoryHolidayDays'].includes(item.key)">
-          <!-- 天数相关的下拉选择器 -->
-          <picker :range="dayOptions" @change="(e) => handlePickerChange(e, item.key, 'day')" class="input">
+          <picker mode="date" fields="month" :value="formData[item.key]" @change="handleDateChange" class="input picker-input">
             <view class="picker-text">
               {{ formData[item.key] || item.placeholder }}
             </view>
@@ -32,7 +16,7 @@
         </template>
         <input
             v-else
-            type="number"
+            type="digit"
             v-model.number="formData[item.key]"
             class="input"
             :placeholder="item.placeholder"
@@ -47,7 +31,7 @@
     <!-- 实发工资展示区域 -->
     <view class="salary-display" :class="{ 'salary-animation': salaryAnimation }">
       <text class="salary-display-title">窝囊费：</text>
-      <text class="salary-display-amount" :class="{ 'salary-amount-animation': salaryAnimation }">¥{{ estimatedSalary.toFixed(2) }}</text>
+      <text class="salary-display-amount" :class="{ 'salary-amount-animation': salaryAnimation }">¥{{ formatNumber(estimatedSalary) }}</text>
     </view>
 
     <!-- 艺术字效果 -->
@@ -65,18 +49,6 @@
 <script>
 export default {
   data() {
-    // 生成工资相关的下拉选项（3000-10000，以500为跨度）
-    const salaryOptions = [];
-    for (let i = 3000; i <= 10000; i += 500) {
-      salaryOptions.push(i.toString());
-    }
-
-    // 生成天数相关的下拉选项（1-31）
-    const dayOptions = [];
-    for (let i = 0; i <= 31; i++) {
-      dayOptions.push(i.toString());
-    }
-
     return {
       isActive: false,
       activeInput: '',
@@ -86,9 +58,6 @@ export default {
       showArtText: false,
       // 时间API，不需要注册即可使用
       holidayApi: 'http://timor.tech/api/holiday/year',
-      // 下拉选项
-      salaryOptions,
-      dayOptions,
       formData: {
         baseSalary: 0,
         attendanceDays: 0,
@@ -141,20 +110,6 @@ export default {
     },
     handleInputBlur() {
       this.activeInput = '';
-      // 计算实发工资
-      this.calculateEstimatedSalary();
-    },
-    handlePickerChange(e, key, type) {
-      const index = e.detail.value;
-      let value = 0;
-
-      if (type === 'salary') {
-        value = parseInt(this.salaryOptions[index]);
-      } else if (type === 'day') {
-        value = parseInt(this.dayOptions[index]);
-      }
-
-      this.formData[key] = value;
       // 计算实发工资
       this.calculateEstimatedSalary();
     },
@@ -284,6 +239,10 @@ export default {
           this.calculateEstimatedSalary();
         }
       });
+    },
+    // 格式化数字，添加千分符
+    formatNumber(num) {
+      return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
   }
 }
